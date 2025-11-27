@@ -1,0 +1,324 @@
+/*---------------------------------------------------
+   ROOT + DARK MODE
+--------------------------------------------------- */
+:root {
+  --bg:#071024;
+  --card:#0b1220;
+  --accent:#06b6d4;
+  --muted:#94a3b8;
+  --glass: rgba(255,255,255,0.04);
+  --pad-w:140px;
+  --pad-h:90px;
+
+  /* Animations */
+  --fade: 0.4s ease;
+  --slide: 0.5s cubic-bezier(.25,.8,.25,1);
+}
+
+/* Dark Mode Variables */
+[data-theme="light"] {
+  --bg:#f4f8ff;
+  --card:#ffffff;
+  --accent:#0ea5e9;
+  --muted:#475569;
+  --glass: rgba(0,0,0,0.06);
+  color:#0f172a;
+}
+
+/* ---------------------------------------------------
+   GLOBAL + ANIMATIONS
+--------------------------------------------------- */
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  background:linear-gradient(180deg,var(--bg),#0b1d30);
+  color:#e6eef6;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  transition:background 0.5s ease, color 0.5s ease;
+}
+
+.app{
+  width:100%;
+  max-width:1100px;
+  opacity:0;
+  animation:fadeIn 1s forwards;
+}
+
+/* Fade in animation */
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(12px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+/* ---------------------------------------------------
+   CARDS + HEADER
+--------------------------------------------------- */
+.card{
+  background:var(--card);
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:12px;
+  padding:14px;
+  box-shadow:0 8px 24px rgba(2,6,23,0.7);
+  border:1px solid var(--glass);
+  backdrop-filter:blur(10px);
+  transition:background 0.4s ease, box-shadow 0.4s ease;
+  animation:slideUp var(--slide);
+}
+
+@keyframes slideUp{
+  from{opacity:0; transform:translateY(14px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+h1{margin:0;font-size:18px}
+
+/* ---------------------------------------------------
+   PAGE SWITCHING
+--------------------------------------------------- */
+.login-screen, .main-screen{
+  display:none;
+  opacity:0;
+  transform:translateY(20px);
+  transition:opacity 0.4s ease, transform 0.4s ease;
+}
+
+.visible{
+  display:block!important;
+  opacity:1!important;
+  transform:translateY(0)!important;
+}
+
+/* ---------------------------------------------------
+   GRID
+--------------------------------------------------- */
+.grid{display:flex;gap:18px;align-items:flex-start}
+.left{flex:1}
+.right{width:360px}
+
+/* ---------------------------------------------------
+   PAD BUTTONS
+--------------------------------------------------- */
+.pads{display:flex;flex-wrap:wrap;gap:12px}
+
+.pad{
+  width:var(--pad-w);
+  height:var(--pad-h);
+  background:rgba(255,255,255,0.03);
+  border-radius:10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  user-select:none;
+  transition:background 0.25s ease, transform 0.15s ease;
+  animation:fadeIn 0.5s ease;
+}
+
+.pad:hover{
+  background:rgba(255,255,255,0.06);
+  transform:scale(1.04);
+}
+
+.pad:active{
+  transform:scale(0.97);
+}
+
+.pad .label{font-weight:700}
+.pad .sub{font-size:12px;color:var(--muted);margin-top:6px}
+
+.pad.emergency{
+  border:2px solid rgba(255,80,80,0.18);
+  background:linear-gradient(180deg, rgba(255,80,80,0.05), rgba(255,255,255,0.01));
+}
+
+/* ---------------------------------------------------
+   BUTTONS
+--------------------------------------------------- */
+button{
+  background:var(--accent);
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  color:#022;
+  cursor:pointer;
+  font-weight:600;
+  transition:background 0.3s ease, transform 0.2s ease;
+}
+
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+
+button:active{
+  transform:translateY(1px);
+}
+
+button.ghost{
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.06);
+  color:var(--muted);
+}
+
+/* ---------------------------------------------------
+   INPUTS
+--------------------------------------------------- */
+label{font-size:13px;color:var(--muted)}
+input[type=text],input[type=password]{
+  width:100%;
+  padding:8px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.02);
+  color:inherit;
+  transition:border 0.3s ease, background 0.3s ease;
+}
+
+input:focus{
+  border-color:var(--accent);
+  background:rgba(255,255,255,0.06);
+  outline:none;
+}
+
+/* ---------------------------------------------------
+   HISTORY / LOG
+--------------------------------------------------- */
+.history{
+  max-height:220px;
+  overflow:auto;
+  padding:6px;
+  border-radius:8px;
+  border:1px dashed rgba(255,255,255,0.06);
+  margin-top:8px;
+}
+
+.hist-item{
+  padding:8px;
+  border-radius:6px;
+  margin-bottom:6px;
+  background:rgba(255,255,255,0.03);
+  display:flex;
+  justify-content:space-between;
+  animation:fadeIn 0.4s ease;
+}
+
+.small{font-size:12px;color:var(--muted)}
+.status-pill{
+  padding:6px 8px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.05);
+  font-size:12px;
+}
+
+/* ---------------------------------------------------
+   PREDICTIONS PANEL
+--------------------------------------------------- */
+.predictions{
+  max-height:180px;
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-top:6px;
+}
+
+.pred{
+  padding:8px;
+  border-radius:6px;
+  background:rgba(255,255,255,0.03);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  animation:fadeIn 0.3s ease;
+}
+
+.priority{font-weight:700}
+
+footer{
+  margin-top:14px;
+  color:var(--muted);
+  font-size:12px;
+  text-align:center
+}
+
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.center{text-align:center}
+.note{font-size:12px;color:var(--muted);margin-top:6px}
+.muted{color:var(--muted)}
+/* Default Light Mode */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    color: #222;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f2f2f2;
+    border-bottom: 2px solid #ddd;
+}
+.toggle-btn {
+    padding: 8px 14px;
+    border: none;
+    background: #444;
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+}
+/* Dark Mode Activated */
+body.dark-mode {
+    background: #121212;
+    color: #e0e0e0;
+}
+.topbar.dark-mode {
+    background: #1f1f1f;
+    border-bottom-color: #333;
+}
+.toggle-btn.dark-mode {
+    background: #e0e0e0;
+    color: #000;
+}
+
+.back-btn {
+    padding: 8px 14px;
+    background: #444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.back-btn:hover {
+    background: #666;
+}
+.language-select {
+  width: auto;
+  max-width: 200px;   /* optional limit */
+}
+.language-select {
+  width: 180px;   /* or any size you want */
+}

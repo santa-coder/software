@@ -1,0 +1,284 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <title>Assistive Alert Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 980px; margin: 18px; }
+    button { margin: 6px; padding: 8px 12px; }
+    #logs { width:100%; border-collapse: collapse; }
+    #logs th, #logs td { border: 1px solid #ccc; padding: 6px; }
+    .emergency { background:#ffcccc; }
+    .badge { font-weight:bold; padding:4px 8px; border-radius:6px; background:#eee; }
+  </style>
+</head>
+<body>
+  <h2>Assistive Alert — Web Dashboard</h2>
+
+  <div>
+    <button id="connectBtn">Connect</button>
+    <button id="getLogsBtn" disabled>Get Logs</button>
+    <button id="clearLogsBtn" disabled>Clear Logs</button>
+    <button id="downloadBtn" disabled>Download CSV</button>
+  </div>
+
+  <div style="margin-top:12px;">
+    <strong>Connection:</strong> <span id="connStatus">Not connected</span><br>
+    <strong>Last Event:</strong> <span id="lastEvent">—</span><br>
+    <strong>Total Logs:</strong> <span id="logCount">0</span>
+  </div>
+
+  <h3>Live Events</h3>
+  <div id="events" style="min-height:80px; border:1px solid #ddd; padding:8px;"></div>
+
+  <h3>History</h3>
+  <table id="logs">
+    <thead><tr><th>#</th><th>Sensor</th><th>Message</th><th>Timestamp (s)</th><th>H:MM:SS</th></tr></thead>
+    <tbody id="logsBody"></tbody>
+  </table>
+
+<script>
+let port = null;
+let reader = null;
+let inputDone = null;
+let outputDone = null;
+let writer = null;
+let keepReading = true;
+
+const connectBtn = document.getElementById('connectBtn');
+const getLogsBtn = document.getElementById('getLogsBtn');
+const clearLogsBtn = document.getElementById('clearLogsBtn');
+const downloadBtn = document.getElementById('downloadBtn');
+const connStatus = document.getElementById('connStatus');
+const lastEvent = document.getElementById('lastEvent');
+const eventsDiv = document.getElementById('events');
+const logsBody = document.getElementById('logsBody');
+const logCountSpan = document.getElementById('logCount');
+
+let logs = []; // {sensor, ts}
+
+function appendEvent(text, emergency=false) {
+  const el = document.createElement('div');
+  el.textContent = (new Date()).toLocaleTimeString() + ' — ' + text;
+  if (emergency) el.classList.add('emergency');
+  eventsDiv.prepend(el);
+  lastEvent.textContent = text;
+}
+
+// parse timestamp to H:MM:SS
+function fmtHMS(s) {
+  s = Number(s);
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const sec = s % 60;
+  if (h > 0) return `${h}:${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+  return `${String(m).padStart(2,'0')}:${String(sec).padStart(2,'0')}`;
+}
+
+function addLog(sensor, ts) {
+  logs.push({sensor: sensor, ts: Number(ts)});
+  renderLogs();
+  logCountSpan.textContent = logs.length;
+}
+
+function renderLogs() {
+  logsBody.innerHTML = '';
+  for (let i = 0; i < logs.length; i++) {
+    const r = logs[i];
+    const row = document.createElement('tr');
+    row.innerHTML = `<td>${i+1}</td>
+                     <td>S${r.sensor}</td>
+                     <td>${sensorMessage(r.sensor)}</td>
+                     <td>${r.ts}</td>
+                     <td>${fmtHMS(r.ts)}</td>`;
+    logsBody.appendChild(row);
+  }
+  downloadBtn.disabled = logs.length === 0;
+}
+
+function sensorMessage(sensor) {
+  const map = {
+    1: "I Need Water",
+    2: "Please Help Me",
+    3: "I Am In Pain",
+    4: "I Need To Go",
+    5: "I Am Hungry",
+    6: "!!! EMERGENCY !!!"
+  };
+  return map[sensor] || "";
+}
+
+async function connectSerial() {
+  try {
+    port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    connStatus.textContent = 'Connected';
+    connectBtn.textContent = 'Disconnect';
+    getLogsBtn.disabled = false;
+    clearLogsBtn.disabled = false;
+
+    const encoder = new TextEncoderStream();
+    outputDone = encoder.readable.pipeTo(port.writable);
+    writer = encoder.writable.getWriter();
+
+    const decoder = new TextDecoderStream();
+    inputDone = port.readable.pipeTo(decoder.writable);
+    reader = decoder.readable.getReader();
+
+    readLoop();
+  } catch (err) {
+    console.error(err);
+    connStatus.textContent = 'Connection failed';
+  }
+}
+
+async function disconnectSerial() {
+  keepReading = false;
+  if (reader) { await reader.cancel(); reader = null; }
+  if (inputDone) { await inputDone.catch(()=>{}); inputDone = null; }
+  if (writer) { writer.close(); writer = null; }
+  if (outputDone) { await outputDone; outputDone = null; }
+  if (port) { await port.close(); port = null; }
+  connStatus.textContent = 'Not connected';
+  connectBtn.textContent = 'Connect';
+  getLogsBtn.disabled = true;
+  clearLogsBtn.disabled = true;
+}
+
+async function readLoop() {
+  keepReading = true;
+  while (port && keepReading) {
+    try {
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (value) {
+        handleSerialData(value);
+      }
+    } catch (err) {
+      console.error('Read error', err);
+      break;
+    }
+  }
+}
+
+let rxBuf = '';
+function handleSerialData(chunk) {
+  rxBuf += chunk;
+  // split lines
+  let nl;
+  while ((nl = rxBuf.indexOf('\n')) >= 0) {
+    const line = rxBuf.slice(0, nl).trim();
+    rxBuf = rxBuf.slice(nl + 1);
+    if (line.length === 0) continue;
+    parseLine(line);
+  }
+}
+
+function parseLine(line) {
+  // known messages:
+  // READY
+  // EVENT NORMAL <sensor> <ts>
+  // EVENT EMERGENCY_START 6 <ts>
+  // EVENT EMERGENCY_STOP 6 <ts>
+  // LOGS_COUNT <n>
+  // LOG <sensor> <ts>
+  // DONE
+  // COUNT <n>
+  // CLEARED
+  console.log('RX:', line);
+  const parts = line.split(/\s+/);
+  if (parts[0] === 'READY') {
+    appendEvent('Device READY');
+    return;
+  }
+  if (parts[0] === 'EVENT') {
+    if (parts[1] === 'NORMAL') {
+      appendEvent(`NORMAL S${parts[2]} @ ${parts[3]}s`);
+    } else if (parts[1] === 'EMERGENCY_START') {
+      appendEvent(`EMERGENCY START S${parts[2]} @ ${parts[3]}s`, true);
+    } else if (parts[1] === 'EMERGENCY_STOP') {
+      appendEvent(`EMERGENCY STOP S${parts[2]} @ ${parts[3]}s`);
+    }
+    return;
+  }
+  if (parts[0] === 'LOGS_COUNT') {
+    logs = []; // will be replaced by incoming LOG lines
+    logCountSpan.textContent = parts[1];
+    return;
+  }
+  if (parts[0] === 'LOG') {
+    const sensor = Number(parts[1]);
+    const ts = Number(parts[2]);
+    addLog(sensor, ts);
+    return;
+  }
+  if (parts[0] === 'DONE') {
+    appendEvent('Finished receiving logs');
+    return;
+  }
+  if (parts[0] === 'COUNT') {
+    logCountSpan.textContent = parts[1];
+    appendEvent(`Log Count ${parts[1]}`);
+    return;
+  }
+  if (parts[0] === 'CLEARED') {
+    logs = [];
+    renderLogs();
+    appendEvent('Logs cleared');
+    return;
+  }
+  if (parts[0] === 'UNK_CMD') {
+    appendEvent('Unknown command reply: ' + parts.slice(1).join(' '));
+    return;
+  }
+}
+
+async function sendCommand(cmd) {
+  if (!writer) return;
+  await writer.write(cmd + "\n");
+}
+
+connectBtn.addEventListener('click', async () => {
+  if (!port) {
+    await connectSerial();
+  } else {
+    await disconnectSerial();
+  }
+});
+
+getLogsBtn.addEventListener('click', async () => {
+  logs = [];
+  renderLogs();
+  await sendCommand('GET_LOGS');
+});
+
+clearLogsBtn.addEventListener('click', async () => {
+  if (!confirm('Clear all logs on the device?')) return;
+  await sendCommand('CLEAR_LOGS');
+});
+
+downloadBtn.addEventListener('click', () => {
+  if (logs.length === 0) return;
+  let csv = 'index,sensor,message,ts,hhmmss\n';
+  logs.forEach((r, idx) => {
+    csv += `${idx+1},S${r.sensor},"${sensorMessage(r.sensor)}",${r.ts},${fmtHMS(r.ts)}\n`;
+  });
+  const blob = new Blob([csv], { type: 'text/csv' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = 'assistive_logs.csv';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+});
+
+// helper: human-friendly message
+function sensorMessage(sensor) {
+  const map = {1:"I Need Water",2:"Please Help Me",3:"I Am In Pain",4:"I Need To Go",5:"I Am Hungry",6:"!!! EMERGENCY !!!"};
+  return map[sensor] || '';
+}
+</script>
+</body>
+</html>

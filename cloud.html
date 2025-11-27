@@ -1,0 +1,323 @@
+<nav style="padding:15px; background:#0b1a2e; color:white; text-align:center;">
+</nav>
+<!doctype html>
+<html lang="en">
+  <title>Cloud</title>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <style>
+    /* ---------- Layout & Appearance ---------- */
+    :root{
+      --blue:#0b67b3;
+      --muted:#6b7280;
+      --good:#16a34a;
+      --warn:#f59e0b;
+      --bad:#ef4444;
+      --card-bg: #ffffff;
+      --page-bg: linear-gradient(145deg,#0f1b33,#1f3558);
+    }
+    html,body{height:100%;margin:0;font-family:Segoe UI,Arial,Helvetica,sans-serif;background:var(--page-bg);color:#0b314f}
+    .wrap{max-width:900px;margin:28px auto;padding:20px}
+    h1{color:#e7f6ff;text-align:center;margin:0 0 14px}
+    .panel{background:rgba(255,255,255,0.95);border-radius:10px;padding:18px;margin:14px 0;box-shadow:0 6px 20px rgba(2,6,23,0.25)}
+    .panel h2{color:var(--blue);margin:0 0 8px;font-size:18px}
+    ul {margin:8px 0 0 0;padding:0;list-style:none}
+    li{padding:8px;border-bottom:1px solid #eef3f7;font-size:14px}
+    .battery-status{font-weight:700;font-size:1.05rem}
+    .battery-status.high{color:var(--good)}
+    .battery-status.medium{color:var(--warn)}
+    .battery-status.low{color:var(--bad)}
+
+    .predictive-alert{background:#f2f8fd;border-left:4px solid #2196F3;border-radius:6px;padding:14px;margin:10px 0;position:relative}
+    .predictive-alert .alert-title{font-weight:700;color:#0b3c69}
+    .predictive-alert .alert-body{color:#155a8a}
+    .predictive-alert .alert-time{font-style:italic;color:#3871b4}
+    .predictive-alert .alert-icon{position:absolute;right:12px;top:12px;font-size:20px;color:#2196F3}
+
+    button, .btn{
+      display:inline-block;background:#e3f0fd;color:#0b3c69;border:1px solid #2196F3;padding:10px 14px;border-radius:6px;cursor:pointer;
+      font-weight:600;margin:10px 0;
+    }
+    button:active{transform:translateY(1px)}
+
+    /* touch area */
+    #touchArea{
+      width:320px;max-width:90%;height:150px;margin:18px auto;border-radius:10px;
+      display:flex;align-items:center;justify-content:center;background:#f5f5f7;border:2px solid #ddd;color:#123;padding:12px;
+      user-select:none;cursor:pointer;transition:all .18s;
+      text-align:center;font-size:18px;
+    }
+    #touchArea.soft-press{ background:#dff6ff;border-color:#9fe7ff; box-shadow:0 6px 18px rgba(30,140,190,0.12) }
+    #touchArea.hard-press{ background:#fff1f2;border-color:#f5c2c7; box-shadow:0 6px 18px rgba(220,53,69,0.12); color:#7a1e1e }
+
+    .muted { color: var(--muted); font-size:13px }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Cloud Dashboard</h1>
+    <header>
+      <button id="btnBack">Back to Dashboard</button>
+    </header>
+
+    <div class="panel">
+      <h2>Last 10 Alerts</h2>
+      <ul id="alertsList" aria-live="polite"></ul>
+    </div>
+
+    <div class="panel">
+      <h2>Patient Condition Timeline</h2>
+      <ul id="timelineList"></ul>
+    </div>
+
+    <div class="panel">
+      <h2>Battery Status</h2>
+      <p class="battery-status" id="batteryStatus">Loading...</p>
+      <p class="muted">Status is simulated in this demo.</p>
+    </div>
+
+    <div class="panel">
+      <h2>AI Predictive Needs Model</h2>
+      <p class="muted">If a patient requests water every 3 hours, system predicts the next request and reminds caregiver in advance.</p>
+      <button id="waterRequestBtn">Patient Just Asked for Water</button>
+
+      <div class="predictive-alert" aria-live="polite">
+        <div class="alert-title">Predicted Next Need</div>
+        <div class="alert-body" id="nextNeed">—</div>
+        <div class="alert-time" id="reminder">—</div>
+        <div class="alert-icon">⏰</div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Touch / Emotion Input</h2>
+      <div id="touchArea" role="button" tabindex="0" aria-pressed="false">Press here — soft or hard</div>
+      <p class="muted">Soft press = normal request. Long/hard press = urgent/pain.</p>
+    </div>
+  </div>
+  <button onclick="history.back()" class="back-btn">⬅ Back</button>
+
+  <script>
+  /************************************************************************
+   * Clean, corrected JS for the dashboard
+   * - fixes template/DOM errors from earlier version
+   * - adds pointer events for mobile + mouse
+   * - speech-synthesis is guarded for unsupported browsers
+   ************************************************************************/
+
+  // Demo data (replace with real data source in production)
+  document.getElementById("btnBack").addEventListener("click", ()=>{
+    window.location.href = "main.html";
+});
+
+  // Simple login protection
+if(sessionStorage.getItem("loggedIn") !== "true"){
+    window.location.href = "login.html";
+}
+
+  const alerts = [
+    "High heart rate detected",
+    "Low oxygen level",
+    "Device disconnected",
+    "Fall detected",
+    "Device reconnected",
+    "Temperature high",
+    "Low battery",
+    "Normal condition restored",
+    "Sudden movement detected",
+    "Scheduled maintenance"
+  ];
+
+  const conditionTimeline = [
+    "08:00 - Stable",
+    "09:15 - Heart rate elevated",
+    "09:30 - Alert triggered",
+    "10:00 - Condition normalized",
+    "10:45 - Resting"
+  ];
+
+  // Simulated battery (0..100)
+  let batteryLevel = 85;
+
+  // DOM helpers
+  function loadAlerts(){
+    const list = document.getElementById('alertsList');
+    list.innerHTML = '';
+    alerts.slice(0,10).forEach(item=>{
+      const li = document.createElement('li');
+      li.textContent = item;
+      list.appendChild(li);
+    });
+  }
+
+  function loadTimeline(){
+    const list = document.getElementById('timelineList');
+    list.innerHTML = '';
+    conditionTimeline.forEach(item=>{
+      const li = document.createElement('li');
+      li.textContent = item;
+      list.appendChild(li);
+    });
+  }
+
+  function updateBatteryStatus(){
+    const el = document.getElementById('batteryStatus');
+    el.className = 'battery-status'; // reset classes
+    let msg = '';
+    if (batteryLevel < 20){
+      el.classList.add('low');
+      msg = `Battery Level: ${batteryLevel}% (Low)`;
+    } else if (batteryLevel < 50){
+      el.classList.add('medium');
+      msg = `Battery Level: ${batteryLevel}% (Medium)`;
+    } else {
+      el.classList.add('high');
+      msg = `Battery Level: ${batteryLevel}% (Good)`;
+    }
+    el.textContent = msg;
+  }
+
+  // Predictive model params
+  let lastRequest = new Date();
+  const INTERVAL_MS = 3 * 60 * 60 * 1000;   // 3 hours between requests
+  const REMINDER_OFFSET_MS = 30 * 60 * 1000; // remind 30 minutes before
+  const NOTIFY_BEFORE_MS = 10 * 60 * 1000;   // notify 10 minutes before
+
+  function predictNextNeed(){
+    const nextNeed = new Date(lastRequest.getTime() + INTERVAL_MS);
+    const reminderTime = new Date(nextNeed.getTime() - REMINDER_OFFSET_MS);
+
+    document.getElementById('nextNeed').textContent = `Next predicted need: ${nextNeed.toLocaleString()}`;
+    document.getElementById('reminder').textContent = `Caregiver reminder at: ${reminderTime.toLocaleString()}`;
+
+    return nextNeed;
+  }
+
+  function updateRequest(){
+    lastRequest = new Date();
+    predictNextNeed();
+    // in a real app you'd also append to alerts / persist / notify remote
+    alert('Last request recorded. Prediction updated.');
+  }
+
+  function notifyCaregiver(nextTime){
+    // show a simple alert for demo; replace with real notification logic
+    alert('Caregiver reminder — predicted need at: ' + nextTime.toLocaleTimeString());
+  }
+
+  function checkAndNotify(){
+    const now = new Date();
+    const nextNeed = new Date(lastRequest.getTime() + INTERVAL_MS);
+    const timeUntil = nextNeed - now;
+    if (timeUntil <= NOTIFY_BEFORE_MS && timeUntil > 0){
+      notifyCaregiver(nextNeed);
+    }
+  }
+
+  // Speech utility (safe)
+  function speak(text, pitch=1.0){
+    try {
+      if (!('speechSynthesis' in window)) return;
+      const u = new SpeechSynthesisUtterance(text);
+      u.pitch = pitch;
+      // leave voice selection to browser default for simplicity
+      window.speechSynthesis.cancel();
+      window.speechSynthesis.speak(u);
+    } catch(e){
+      console.warn('Speech not available', e);
+    }
+  }
+
+  // Touch / press detection
+  const touchArea = document.getElementById('touchArea');
+  let pressStart = 0;
+  let pressTimeout = null;
+
+  function onPressStart(e){
+    e.preventDefault && e.preventDefault();
+    pressStart = performance.now();
+    // visual immediate feedback: remove both classes, we'll add on end
+    touchArea.classList.remove('soft-press','hard-press');
+    // for long press visual while pressing, optionally add a "pressing" class
+    if (pressTimeout) clearTimeout(pressTimeout);
+    pressTimeout = setTimeout(()=> {
+      // if still pressing after 2s treat as hard press urgency
+      touchArea.classList.add('hard-press');
+    }, 2000);
+  }
+
+  function onPressEnd(e){
+    e.preventDefault && e.preventDefault();
+    const duration = performance.now() - pressStart;
+    if (pressTimeout){ clearTimeout(pressTimeout); pressTimeout = null; }
+
+    // classify
+    if (duration >= 2000){ // long press (>=2s) -> urgent
+      touchArea.classList.remove('soft-press');
+      touchArea.classList.add('hard-press');
+      touchArea.setAttribute('aria-pressed','true');
+      speak('Please help me quickly', 1.4);
+      // simulate an "emergency" alert (for demo, add to alerts list)
+      alerts.unshift('Emergency (urgent press) — ' + new Date().toLocaleTimeString());
+      loadAlerts();
+      predictNextNeed();
+    } else if (duration > 500){ // medium press -> soft
+      touchArea.classList.remove('hard-press');
+      touchArea.classList.add('soft-press');
+      touchArea.setAttribute('aria-pressed','false');
+      speak('Please assist me', 1.0);
+      alerts.unshift('Request (soft press) — ' + new Date().toLocaleTimeString());
+      loadAlerts();
+      updateRequest();
+    } else { // tap
+      // short tap: quick request
+      touchArea.classList.remove('hard-press');
+      touchArea.classList.add('soft-press');
+      touchArea.setAttribute('aria-pressed','false');
+      speak('I need help', 1.0);
+      alerts.unshift('Tap request — ' + new Date().toLocaleTimeString());
+      loadAlerts();
+      updateRequest();
+    }
+
+    // remove the visual highlight after a short delay so user sees feedback
+    setTimeout(()=> touchArea.classList.remove('soft-press','hard-press'), 1500);
+  }
+
+  // support pointer events which unify mouse/touch/stylus
+  touchArea.addEventListener('pointerdown', onPressStart);
+  touchArea.addEventListener('pointerup', onPressEnd);
+  touchArea.addEventListener('pointercancel', onPressEnd);
+  // also support keyboard "enter/space"
+  touchArea.addEventListener('keydown', (ev)=>{
+    if (ev.key === 'Enter' || ev.key === ' ') {
+      ev.preventDefault();
+      onPressStart(ev);
+      setTimeout(()=> onPressEnd(ev), 120);
+    }
+  });
+
+  // Water request button
+  document.getElementById('waterRequestBtn').addEventListener('click', updateRequest);
+
+  // Initialization
+  window.addEventListener('load', ()=>{
+    loadAlerts();
+    loadTimeline();
+    updateBatteryStatus();
+    predictNextNeed();
+    // periodic tasks
+    setInterval(()=> {
+      // fake battery drain for demo
+      batteryLevel = Math.max(0, batteryLevel - 1);
+      updateBatteryStatus();
+    }, 60 * 1000); // every minute
+
+    // check predictive reminders every minute
+    setInterval(checkAndNotify, 60 * 1000);
+  });
+    
+</script>
+</body>
+</html>
