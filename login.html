@@ -48,7 +48,7 @@ btnLogin.addEventListener('click', () => {
     // Set session storage flag
     sessionStorage.setItem('loggedIn', 'true'); 
     // Redirect to main app page
-    window.location.href = "main.html";
+    window.location.href = "index.html";
   } else {
     alert('Invalid username or password');
   }
@@ -57,7 +57,7 @@ btnLogin.addEventListener('click', () => {
 // Guest login (optional)
 btnLoginGuest.addEventListener('click', () => {
   sessionStorage.setItem('loggedIn', 'true');
-  window.location.href = "main.html";
+  window.location.href = "index.html";
 });
 </script>
 </body>
