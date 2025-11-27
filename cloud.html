@@ -108,12 +108,12 @@
 
   // Demo data (replace with real data source in production)
   document.getElementById("btnBack").addEventListener("click", ()=>{
-    window.location.href = "index.html";
+    window.location.href = "main.html";
 });
 
   // Simple login protection
 if(sessionStorage.getItem("loggedIn") !== "true"){
-    window.location.href = "login.html";
+    window.location.href = "index.html";
 }
 
   const alerts = [

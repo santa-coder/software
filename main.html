@@ -1,0 +1,866 @@
+<!doctype html>
+<html lang="en">
+  <title>TAC TONE APP</title>
+<head>
+    <link rel="stylesheet" href="new.css">
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>TAC TONE APP</title>
+<style>
+/* ---------------------------------------------------
+   ROOT + DARK MODE
+--------------------------------------------------- */
+:root {
+  --bg:#071024;
+  --card:#0b1220;
+  --accent:#06b6d4;
+  --muted:#94a3b8;
+  --glass: rgba(255,255,255,0.04);
+  --pad-w:140px;
+  --pad-h:90px;
+
+  /* Animations */
+  --fade: 0.4s ease;
+  --slide: 0.5s cubic-bezier(.25,.8,.25,1);
+}
+
+/* Dark Mode Variables */
+[data-theme="light"] {
+  --bg:#f4f8ff;
+  --card:#ffffff;
+  --accent:#0ea5e9;
+  --muted:#475569;
+  --glass: rgba(0,0,0,0.06);
+  color:#0f172a;
+}
+
+/* ---------------------------------------------------
+   GLOBAL + ANIMATIONS
+--------------------------------------------------- */
+*{
+  box-sizing:border-box;
+  font-family:Inter,system-ui,Segoe UI,Roboto,Arial;
+}
+
+body{
+  margin:0;
+  background:var(--bg);
+  background:linear-gradient(180deg,var(--bg),#0b1d30);
+  color:#e6eef6;
+  min-height:100vh;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  padding:20px;
+  transition:background 0.5s ease, color 0.5s ease;
+}
+
+.app{
+  width:100%;
+  max-width:1100px;
+  opacity:0;
+  animation:fadeIn 1s forwards;
+}
+
+/* Fade in animation */
+@keyframes fadeIn{
+  from{opacity:0; transform:translateY(12px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+/* ---------------------------------------------------
+   CARDS + HEADER
+--------------------------------------------------- */
+.card{
+  background:var(--card);
+  background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+  border-radius:12px;
+  padding:14px;
+  box-shadow:0 8px 24px rgba(2,6,23,0.7);
+  border:1px solid var(--glass);
+  backdrop-filter:blur(10px);
+  transition:background 0.4s ease, box-shadow 0.4s ease;
+  animation:slideUp var(--slide);
+}
+
+@keyframes slideUp{
+  from{opacity:0; transform:translateY(14px);}
+  to{opacity:1; transform:translateY(0);}
+}
+
+header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:12px;
+  margin-bottom:14px;
+}
+
+h1{margin:0;font-size:18px}
+
+/* ---------------------------------------------------
+   PAGE SWITCHING
+--------------------------------------------------- */
+.login-screen, .main-screen{
+  display:none;
+  opacity:0;
+  transform:translateY(20px);
+  transition:opacity 0.4s ease, transform 0.4s ease;
+}
+
+.visible{
+  display:block!important;
+  opacity:1!important;
+  transform:translateY(0)!important;
+}
+
+/* ---------------------------------------------------
+   GRID
+--------------------------------------------------- */
+.grid{display:flex;gap:18px;align-items:flex-start}
+.left{flex:1}
+.right{width:360px}
+
+/* ---------------------------------------------------
+   PAD BUTTONS
+--------------------------------------------------- */
+.pads{display:flex;flex-wrap:wrap;gap:12px}
+
+.pad{
+  width:var(--pad-w);
+  height:var(--pad-h);
+  background:rgba(255,255,255,0.03);
+  border-radius:10px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  user-select:none;
+  transition:background 0.25s ease, transform 0.15s ease;
+  animation:fadeIn 0.5s ease;
+}
+
+.pad:hover{
+  background:rgba(255,255,255,0.06);
+  transform:scale(1.04);
+}
+
+.pad:active{
+  transform:scale(0.97);
+}
+
+.pad .label{font-weight:700}
+.pad .sub{font-size:12px;color:var(--muted);margin-top:6px}
+
+.pad.emergency{
+  border:2px solid rgba(255,80,80,0.18);
+  background:linear-gradient(180deg, rgba(255,80,80,0.05), rgba(255,255,255,0.01));
+}
+
+/* ---------------------------------------------------
+   BUTTONS
+--------------------------------------------------- */
+button{
+  background:var(--accent);
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  color:#022;
+  cursor:pointer;
+  font-weight:600;
+  transition:background 0.3s ease, transform 0.2s ease;
+}
+
+button:hover{
+  transform:translateY(-2px);
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+
+button:active{
+  transform:translateY(1px);
+}
+
+button.ghost{
+  background:transparent;
+  border:1px solid rgba(255,255,255,0.06);
+  color:var(--muted);
+}
+
+/* ---------------------------------------------------
+   INPUTS
+--------------------------------------------------- */
+label{font-size:13px;color:var(--muted)}
+input[type=text],input[type=password]{
+  width:100%;
+  padding:8px;
+  border-radius:8px;
+  border:1px solid rgba(255,255,255,0.08);
+  background:rgba(255,255,255,0.02);
+  color:inherit;
+  transition:border 0.3s ease, background 0.3s ease;
+}
+
+input:focus{
+  border-color:var(--accent);
+  background:rgba(255,255,255,0.06);
+  outline:none;
+}
+
+/* ---------------------------------------------------
+   HISTORY / LOG
+--------------------------------------------------- */
+.history{
+  max-height:220px;
+  overflow:auto;
+  padding:6px;
+  border-radius:8px;
+  border:1px dashed rgba(255,255,255,0.06);
+  margin-top:8px;
+}
+
+.hist-item{
+  padding:8px;
+  border-radius:6px;
+  margin-bottom:6px;
+  background:rgba(255,255,255,0.03);
+  display:flex;
+  justify-content:space-between;
+  animation:fadeIn 0.4s ease;
+}
+
+.small{font-size:12px;color:var(--muted)}
+.status-pill{
+  padding:6px 8px;
+  border-radius:999px;
+  background:rgba(255,255,255,0.05);
+  font-size:12px;
+}
+
+/* ---------------------------------------------------
+   PREDICTIONS PANEL
+--------------------------------------------------- */
+.predictions{
+  max-height:180px;
+  overflow:auto;
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  margin-top:6px;
+}
+
+.pred{
+  padding:8px;
+  border-radius:6px;
+  background:rgba(255,255,255,0.03);
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  animation:fadeIn 0.3s ease;
+}
+
+.priority{font-weight:700}
+
+footer{
+  margin-top:14px;
+  color:var(--muted);
+  font-size:12px;
+  text-align:center
+}
+
+.row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+.center{text-align:center}
+.note{font-size:12px;color:var(--muted);margin-top:6px}
+.muted{color:var(--muted)}
+/* Default Light Mode */
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    background: #ffffff;
+    color: #222;
+    transition: background 0.3s ease, color 0.3s ease;
+}
+.topbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px;
+    background: #f2f2f2;
+    border-bottom: 2px solid #ddd;
+}
+.toggle-btn {
+    padding: 8px 14px;
+    border: none;
+    background: #444;
+    color: white;
+    cursor: pointer;
+    border-radius: 6px;
+}
+/* Dark Mode Activated */
+body.dark-mode {
+    background: #121212;
+    color: #e0e0e0;
+}
+.topbar.dark-mode {
+    background: #1f1f1f;
+    border-bottom-color: #333;
+}
+.toggle-btn.dark-mode {
+    background: #e0e0e0;
+    color: #000;
+}
+
+.back-btn {
+    padding: 8px 14px;
+    background: #444;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.back-btn:hover {
+    background: #666;
+}
+.language-select {
+  width: auto;
+  max-width: 200px;   /* optional limit */
+}
+.language-select {
+  width: 180px;   /* or any size you want */
+}
+</style>
+
+</head>
+<body>
+  <div class="app">
+    <!-- MAIN SCREEN -->
+    <div class="card main-screen" id="mainScreen" style="display:none">
+      <header>
+        <div style="display:flex;gap:12px;align-items:center">
+          <h1>TAC TONE — Dashboard</h1>
+          <div class="small muted" id="userBadge"></div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <div class="status-pill" id="connStatus">Arduino: disconnected</div>
+          <button id="btnConnect">Connect Arduino</button>
+          <button id="btnCloud" class="nf-btn">Cloud Data</button>
+        <!-- Dark Mode Toggle Button -->
+            <button id="themeToggle" class="toggle-btn">Dark Mode</button>
+            <button class="ghost" id="btnLogout">Logout</button>
+        </div>
+        </header>
+      <div class="grid">
+        <!-- LEFT: pads + controls -->
+        <div class="left">
+          <div class="card">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:10px">
+              <div>
+                <div class="small">Touch Pads</div>
+                <div style="font-weight:700">Tap any pad to send an alert</div>
+              </div>
+              <div style="text-align:right">
+                <div class="small">Vibrate on send: <span id="vibStatus">yes</span></div>
+                <div class="small">Motion detect: <span id="motionStatus">off</span></div>
+              </div>
+            </div>
+
+            <div class="pads" id="padsContainer"></div>
+
+            <div class="controls">
+              <button id="btnToggleMotion">Enable Motion Auto</button>
+              <button id="btnSimulateFall" class="ghost">Simulate Fall</button>
+              <button id="btnClearHistory" class="ghost">Clear History</button>
+            </div>
+
+            <div style="margin-top:10px">
+              <label>Webhook URL (optional)</label>
+              <input id="webhookUrl" type="text" placeholder="https://your.server/alerts (optional)">
+              <div class="note">If set, alerts are POSTed to this URL from your browser (CORS applies).</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- RIGHT: status, predictions, history -->
+        <div class="right">
+          <div class="card">
+            <div class="row">
+              <div>
+                <div class="small">System Status</div>
+                <div style="font-weight:700">Realtime</div>
+              </div>
+              <div><div class="status-pill" id="lastAlert">No alerts yet</div></div>
+            </div>
+
+            <div style="margin-top:8px">
+              <label>Voice / TTS</label>
+              <div style="display:flex;gap:8px;margin-top:6px;width:5px;">
+                <select id="voiceSelect"></select>
+                <select id="langSelect">
+                  <option value="en-US">English</option>
+                  <option value="hi-IN">Hindi</option>
+                    <option value="es-ES">Spanish</option>
+                    <option value="fr-FR">French</option>
+                    <option value="de-DE">German</option>
+                    <select class="language-select">
+                </select>
+              </div>
+              <div class="note">Voice will speak confirmation when alert sent.</div>
+            </div>
+          </div>
+
+          <div class="card" style="margin-top:12px">
+            <div class="row">
+              <div>
+                <div class="small">AI Predictions</div>
+                <div style="font-weight:700">Predicted next need</div>
+              </div>
+              <div><div class="small">Local only</div></div>
+            </div>
+            <div class="predictions" id="predictions" style="margin-top:8px"></div>
+          </div>
+
+          <div class="card" style="margin-top:12px">
+            <div class="row">
+              <div>
+                <div class="small">Request History</div>
+                <div style="font-weight:700">Last requests</div>
+              </div>
+              <div><div class="small" id="historyCount">0</div></div>
+            </div>
+            <div id="history" class="history"></div>
+          </div>
+
+          <footer style="margin-top:8px">Built-in demo AI: simple median inter-arrival predictor • No data leaves your browser unless you set a webhook.</footer>
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+/* -------------------------
+   Dark Mode Toggle
+   ------------------------- */
+const toggleBtn = document.getElementById("themeToggle");
+
+toggleBtn.addEventListener("click", () => {
+    document.body.classList.toggle("dark-mode");
+    document.querySelector(".topbar").classList.toggle("dark-mode");
+    toggleBtn.classList.toggle("dark-mode");
+
+    if (document.body.classList.contains("dark-mode")) {
+        toggleBtn.textContent = "☀️ Light Mode";
+    } else {
+        toggleBtn.textContent = "🌙 Dark Mode";
+    }
+});
+/* -------------------------
+   Simple Login Protection
+------------------------- */
+const mainScreen = document.getElementById("mainScreen");
+const btnLogout = document.getElementById("btnLogout");
+const userBadge = document.getElementById("userBadge");
+
+// Check login status
+if (sessionStorage.getItem("loggedIn") !== "true") {
+    // Redirect to login if not logged in
+    window.location.href = "index.html";
+} else {
+    // Show main screen
+    mainScreen.style.display = "block";
+    mainScreen.classList.add("visible");
+    userBadge.textContent = "User"; // Optional: show "User" or "Guest"
+}
+
+// Logout functionality
+if(btnLogout){
+    btnLogout.addEventListener("click", () => {
+        sessionStorage.removeItem("loggedIn"); // Clear login status
+        window.location.href = "index.html";   // Redirect back to login
+    });
+}
+
+// Link to Cloud page
+const btnCloud = document.getElementById("btnCloud");
+if(btnCloud){
+    btnCloud.addEventListener("click", ()=>{
+        // Optional: check if logged in
+        if(sessionStorage.getItem("loggedIn") === "true"){
+            window.location.href = "cloud.html"; // Replace with your file name
+        } else {
+            alert("Please log in first.");
+            window.location.href = "index.html";
+        }
+    });
+}
+/* ===== DARK MODE ===== */
+function toggleDark(){document.body.classList.toggle("dark-mode")}
+
+/* -------------------------
+   App state / UI data
+   ------------------------- */
+const PAD_CONFIG = [
+  {id:'water', label:'Water', hint:'I need water'},
+  {id:'help', label:'Help', hint:'Help please'},
+  {id:'pain', label:'Pain', hint:'I am in pain'},
+  {id:'wash', label:'Washroom', hint:'I need washroom'},
+  {id:'food', label:'Food', hint:'I am hungry'},
+  {id:'emergency', label:'Emergency', hint:'Emergency!'}
+];
+const LOCAL_KEY = 'tactone_history_v1';
+let history = []; // {type, ts, urgent, meta}
+let lastAlert = null;
+let vibEnabled = true;
+let motionEnabled = false;
+
+/* -------------------------
+   Storage
+   ------------------------- */
+function readStorage(){ try{ const s=localStorage.getItem(LOCAL_KEY); history = s? JSON.parse(s): []; }catch(e){ history=[]; } }
+function writeStorage(){ try{ localStorage.setItem(LOCAL_KEY, JSON.stringify(history.slice(-200))); }catch(e){} }
+
+/* -------------------------
+   Render pads / UI
+   ------------------------- */
+function renderPads(){
+  const container = document.getElementById('padsContainer');
+  container.innerHTML = '';
+  PAD_CONFIG.forEach(p=>{
+    const el = document.createElement('div');
+    el.className = 'pad' + (p.id==='emergency'?' emergency':'');
+    el.dataset.id = p.id;
+    el.innerHTML = `<div class="label">${p.label}</div><div class="sub">${p.hint}</div>`;
+    el.onclick = ()=> onPadPress(p.id);
+    el.ondblclick = ()=> onPadDouble(p.id);
+    container.appendChild(el);
+  });
+}
+
+function renderHistory(){
+  const el = document.getElementById('history');
+  el.innerHTML = '';
+  const recent = history.slice().reverse().slice(0,50);
+  document.getElementById('historyCount').textContent = recent.length + ' shown';
+  recent.forEach(h=>{
+    const d = document.createElement('div');
+    d.className = 'hist-item';
+    d.innerHTML = `<div><div style="font-weight:700">${h.type}${h.urgent? ' ⚠':''}</div><div class="small">${new Date(h.ts).toLocaleString()}</div></div><div class="small">${h.meta && h.meta.note ? h.meta.note : ''}</div>`;
+    el.appendChild(d);
+  });
+  document.getElementById('lastAlert').textContent = lastAlert ? `${lastAlert.type}${lastAlert.urgent? ' (EMERGENCY)':''}` : 'No alerts yet';
+}
+
+/* -------------------------
+   Predictions (simple median inter-arrival)
+   ------------------------- */
+function renderPredictions(){
+  const container = document.getElementById('predictions');
+  container.innerHTML='';
+  const byType = {};
+  history.forEach(h=>{ (byType[h.type] = byType[h.type] || []).push(h.ts); });
+  const preds = PAD_CONFIG.map(p=>{
+    const arr = (byType[p.id]||[]).slice().sort((a,b)=>a-b);
+    if(arr.length < 2) return {label:p.label, count:arr.length, next:null, med:null};
+    const diffs = []; for(let i=1;i<arr.length;i++) diffs.push(arr[i]-arr[i-1]);
+    diffs.sort((a,b)=>a-b);
+    const mid = Math.floor((diffs.length-1)/2);
+    const med = diffs[mid];
+    const next = new Date(arr[arr.length-1] + med).toLocaleString();
+    return {label:p.label,count:arr.length,next,med};
+  });
+  preds.sort((a,b)=> (b.count - a.count));
+  preds.forEach(pr=>{
+    const node = document.createElement('div');
+    node.className='pred';
+    node.innerHTML = `<div><div class="priority">${pr.label} ${pr.count?('('+pr.count+')'):''}</div><div class="small">Next: ${pr.next || '—'}</div></div><div class="small">${pr.med?Math.round(pr.med/60000)+' min':''}</div>`;
+    container.appendChild(node);
+  });
+}
+
+/* -------------------------
+   Add history + actions
+   ------------------------- */
+async function addHistory(type, urgent=false, meta=null){
+  const rec = {type, ts: Date.now(), urgent: !!urgent, meta};
+  history.push(rec);
+  lastAlert = rec;
+  writeStorage();
+  renderHistory();
+  renderPredictions();
+  updateStatus(rec);
+  // send to webhook if set
+  const url = (document.getElementById('webhookUrl').value || '').trim();
+  if(url){
+    try{
+      await fetch(url, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify(rec)});
+    }catch(e){ console.warn('Webhook failed', e); }
+  }
+  // speak and vibrate locally
+  notifyLocal(rec);
+  speakConfirmation(rec);
+  if (vibEnabled && navigator.vibrate) navigator.vibrate([60,30,60]);
+  // also send to Arduino if connected
+  if (arduino && arduino.writer) {
+    try { await arduino.write(`PAD:${type}\n`); } catch(e){ console.warn('arduino write failed', e); }
+  }
+}
+
+function updateStatus(rec){
+  document.getElementById('vibStatus').textContent = vibEnabled ? 'yes' : 'no';
+}
+
+/* -------------------------
+   Pad interactions
+   ------------------------- */
+function onPadPress(type){
+  addHistory(type, type==='emergency', {note:'user_tap'});
+  flashPad(type);
+}
+function onPadDouble(type){
+  addHistory(type, type==='emergency', {note:'double_tap'});
+  flashPad(type);
+}
+function flashPad(type){
+  const pad = Array.from(document.querySelectorAll('.pad')).find(el=>el.dataset.id===type);
+  if(!pad) return;
+  pad.style.transform='scale(0.97)';
+  setTimeout(()=>pad.style.transform='scale(1)',120);
+}
+
+/* -------------------------
+   TTS & Local Notifications
+   ------------------------- */
+let voices = [];
+function populateVoices(){
+  voices = speechSynthesis.getVoices() || [];
+  const sel = document.getElementById('voiceSelect'); sel.innerHTML='';
+  voices.forEach((v,i)=> sel.innerHTML += `<option value="${i}">${v.name} — ${v.lang}</option>`);
+  if(voices.length) sel.value = 0;
+}
+if(window.speechSynthesis) {
+  populateVoices();
+  speechSynthesis.onvoiceschanged = populateVoices;
+}
+function speakConfirmation(rec){
+  if(!('speechSynthesis' in window)) return;
+  const sel = document.getElementById('voiceSelect');
+  const vindex = sel && sel.value ? parseInt(sel.value) : 0;
+  const lang = document.getElementById('langSelect').value || 'en-US';
+  const textMap = {
+    'water':'I need water',
+    'help':'Please help me',
+    'pain':'I am in pain',
+    'wash':'I need the washroom',
+    'food':'I need food',
+    'emergency':'Emergency! Need urgent help'
+  };
+  const utter = new SpeechSynthesisUtterance(textMap[rec.type] || rec.type);
+  utter.lang = lang;
+  if(voices[vindex]) utter.voice = voices[vindex];
+  utter.rate = 1.0;
+  utter.pitch = rec.urgent ? 0.7 : 1.0;
+  speechSynthesis.cancel();
+  speechSynthesis.speak(utter);
+}
+function notifyLocal(rec){
+  if (Notification && Notification.permission === 'granted'){
+    new Notification(`Alert: ${rec.type}`, { body: rec.urgent ? 'URGENT' : 'Request' });
+  }
+}
+
+/* -------------------------
+   Motion / fall detection (demo)
+   ------------------------- */
+let motionTimeout = null;
+function toggleMotion(){
+  motionEnabled = !motionEnabled;
+  document.getElementById('motionStatus').textContent = motionEnabled ? 'on' : 'off';
+  document.getElementById('btnToggleMotion').textContent = motionEnabled ? 'Disable Motion Auto' : 'Enable Motion Auto';
+  if(motionEnabled){
+    // for mobiles: attempt request permission for DeviceMotionEvent (iOS)
+    if (typeof DeviceMotionEvent !== 'undefined' && typeof DeviceMotionEvent.requestPermission === 'function'){
+      DeviceMotionEvent.requestPermission().then(resp=>{
+        if(resp === 'granted') window.addEventListener('devicemotion', handleDeviceMotion);
+        else alert('Motion permission denied');
+      }).catch(()=>{ alert('Motion API not available'); });
+    } else {
+      window.addEventListener('devicemotion', handleDeviceMotion);
+    }
+  } else {
+    window.removeEventListener('devicemotion', handleDeviceMotion);
+  }
+}
+const FALL_ACCEL_THRESHOLD = 18.0;
+let lastMotionTs = 0;
+function handleDeviceMotion(e){
+  const acc = e.acceleration || e.accelerationIncludingGravity;
+  if(!acc) return;
+  const ax = acc.x||0, ay = acc.y||0, az = acc.z||0;
+  const mag = Math.sqrt(ax*ax + ay*ay + az*az);
+  lastMotionTs = Date.now();
+  if(mag > FALL_ACCEL_THRESHOLD){
+    if(motionTimeout) clearTimeout(motionTimeout);
+    motionTimeout = setTimeout(()=> {
+      const since = Date.now() - lastMotionTs;
+      if(since >= 3500){ addHistory('emergency', true, {note:'auto_fall_detected', accel:mag}); if(navigator.vibrate) navigator.vibrate([200,100,200,100,400]); }
+    }, 2500);
+  }
+}
+
+/* -------------------------
+   Simple inactivity check
+   ------------------------- */
+function checkInactivity(){
+  const cutoff = Date.now() - (4 * 60*60*1000);
+  const last = history.length ? history[history.length-1].ts : 0;
+  if(last < cutoff) addHistory('help', false, {note:'auto_inactivity_check'});
+}
+
+/* -------------------------
+   Web Serial — Arduino integration
+   ------------------------- */
+let arduino = null; // {port, reader, writer, readLoop}
+const textEncoder = new TextEncoder();
+const textDecoder = new TextDecoder();
+
+async function connectArduino(){
+  if(!('serial' in navigator)){ alert('Web Serial API not supported. Use Chrome/Edge with HTTPS or localhost.'); return; }
+  try{
+    const port = await navigator.serial.requestPort();
+    await port.open({ baudRate: 115200 });
+    arduino = { port, reader: null, writer: null, keepReading: true };
+
+    // writer
+    const writable = port.writable;
+    const writer = writable.getWriter();
+    arduino.writer = {
+      write: async (text) => {
+        await writer.write(textEncoder.encode(text));
+      },
+      release: async () => { await writer.releaseLock(); }
+    };
+
+    // reader loop
+    const readable = port.readable;
+    const reader = readable.getReader();
+    arduino.reader = reader;
+    readLoop(port, reader);
+
+    updateConnStatus(true);
+  }catch(e){
+    console.error('connectArduino error', e);
+    alert('Could not connect to Arduino: ' + e.message);
+  }
+}
+
+async function disconnectArduino(){
+  if(!arduino) return;
+  arduino.keepReading = false;
+  try{
+    if(arduino.reader) { await arduino.reader.cancel(); await arduino.reader.releaseLock(); }
+    if(arduino.writer) await arduino.writer.release();
+    await arduino.port.close();
+  }catch(e){ console.warn('disconnect error', e); }
+  arduino = null;
+  updateConnStatus(false);
+}
+
+function updateConnStatus(connected){
+  document.getElementById('connStatus').textContent = connected ? 'Arduino: connected' : 'Arduino: disconnected';
+  document.getElementById('btnConnect').textContent = connected ? 'Disconnect' : 'Connect Arduino';
+}
+
+/* parse incoming serial data lines */
+async function readLoop(port, reader){
+  let buf = '';
+  try{
+    while(arduino && arduino.keepReading){
+      const { value, done } = await reader.read();
+      if (done) break;
+      if (value){
+        // value is a Uint8Array chunk; decode
+        const s = textDecoder.decode(value);
+        buf += s;
+        let nl;
+        while((nl = buf.indexOf('\n')) >= 0){
+          const line = buf.slice(0, nl).trim();
+          buf = buf.slice(nl+1);
+          if(line) handleArduinoLine(line);
+        }
+      }
+    }
+  }catch(e){
+    console.warn('readLoop error', e);
+  } finally {
+    try{ if(reader) { await reader.releaseLock(); } }catch(e){}
+    if(arduino){ disconnectArduino(); }
+  }
+}
+
+/* handle single line from Arduino */
+function handleArduinoLine(line){
+  console.log('arduino →', line);
+  // expected formats:
+  // PAD:water
+  // EVENT:FALL
+  // INFO:... etc
+  if(line.startsWith('PAD:')){
+    const type = line.slice(4);
+    addHistory(type, type==='emergency', {note:'from_arduino'});
+  } else if(line.startsWith('EVENT:')){
+    const ev = line.slice(6);
+    if(ev === 'FALL') addHistory('emergency', true, {note:'arduino_fall'});
+  } else if(line.startsWith('LOG:')){
+    // keep as log
+    const msg = line.slice(4);
+    console.log('Arduino log:', msg);
+  } else {
+    // unknown: push to history as info
+    addHistory('help', false, {note: line});
+  }
+}
+
+/* send raw command (helper) */
+async function sendRawToArduino(cmd){
+  if(!arduino || !arduino.writer){ alert('Arduino not connected'); return; }
+  try{
+    await arduino.writer.write(cmd + '\n');
+    console.log('sent →', cmd);
+  }catch(e){ console.warn('write failed', e); }
+}
+
+/* -------------------------
+   UI wiring for connect button
+   ------------------------- */
+document.getElementById('btnConnect').addEventListener('click', async ()=>{
+  if(arduino) await disconnectArduino();
+  else await connectArduino();
+});
+
+/* quick actions */
+document.getElementById('btnSimulateFall').addEventListener('click', ()=> addHistory('emergency', true, {note:'manual_simulated_fall'}));
+document.getElementById('btnClearHistory').addEventListener('click', ()=>{ if(confirm('Clear local history?')) { history=[]; writeStorage(); renderHistory(); renderPredictions(); } });
+document.getElementById('btnToggleMotion').addEventListener('click', toggleMotion);
+
+/* open notification permission */
+document.getElementById('vibStatus').parentElement.addEventListener('click', ()=>{ if(Notification && Notification.requestPermission) Notification.requestPermission(); });
+
+/* -------------------------
+   Boot
+   ------------------------- */
+function init(){
+  readStorage();
+  renderPads();
+  renderHistory();
+  renderPredictions();
+  if(window.speechSynthesis) speechSynthesis.onvoiceschanged = populateVoices;
+  // periodic tasks
+  setInterval(()=>{ renderPredictions(); writeStorage(); }, 5000);
+  setInterval(()=>{ checkInactivity(); }, 60*60*1000);
+}
+init();
+</script>
+</body>
+</html>
